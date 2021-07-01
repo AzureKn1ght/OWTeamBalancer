@@ -6,7 +6,7 @@
 	<meta content="text/html; charset=UTF-8" http-equiv="content-type" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>OverWatch Random Tournament</title>
+	<title>OverWatch Team Balancer - Gamers Like Us</title>
 	<meta name="description" content="Overwatch random tournament">
 	<!-- <link rel="stylesheet" href="style.css"> -->
 	<link rel="stylesheet" href="style2.css">
@@ -21,17 +21,24 @@
 	<script src="twitch.js"></script>
 	<script src="twitch_chat.js"></script>
 	<script src="init.js" defer></script>
-
 </head>
 
 <body>
-	<div class="copyright">2018-2021 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a
-			href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
+	<div class="copyright">Copyright &copy;
+		<script>document.write(new Date().getFullYear())</script>
+		<a href="https://github.com/AzureKn1ght" target="_blank">@AzureKn1ght</a> |
+		<a href="http://philson.io/" target="_blank">philson.io</a> &nbsp;
+	</div>
+
 	<header>
-		<h1 class="page-title">Overwatch Random Tournament</h1>
+		<h1 style="display: none" class="page-title">Overwatch Random Tournament</h1>
+		<div>
+			<a href="https://www.facebook.com/ggwplikeus" target="_blank">
+				<img class="logo" src="images/GLU-black.png" alt="Gamers Like Us">
+			</a>
+		</div>
 	</header>
-	<!-- <div class="copyright">2018-2020 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div> -->
-	<div class="battle-tag-cont">
+	<div style="display: none" class="battle-tag-cont">
 		<div class="addplayer_cont">
 			<span id="plus">+</span>
 			<input id="new_player_id" name="new_player_id" type="text" size=35 placeholder="Enter Battle Tag" value=""
@@ -44,13 +51,10 @@
 			<div class="cell workspace-cell">
 				<!-- lobby -->
 
-				<div>
+				<div style="margin-bottom: 25px;">
 					<span class="team-title">Lobby</span>
 				</div>
-
 				<div class="team-toolbar">
-					<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X " />
-
 					<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn"
 						onclick="import_lobby_dlg_open();" value="Import" />
 					<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();"
@@ -79,19 +83,16 @@
 							<div onclick="shuffle_lobby();">Shuffle</div>
 						</div>
 					</div>
+					<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X " />
+
 				</div>
 				<div>
 					<div>
 						<span id="lobby_count">0</span> players,
-					</div>
-					<div>
 						<span id="lobby_captain_count">0</span> captains,
-					</div>
-					<div>
 						<span title="Excluding players without twitch sub or not checked-in"><span
 								id="lobby_active_count">0</span> active</span>
 					</div>
-
 				</div>
 
 				<div class="filter-container">
@@ -111,14 +112,17 @@
 
 				<div title="Drop player here to delete" class="trashcan" id="trashcan" ondrop="player_drop(event)"
 					ondragover="player_allowDrop(event)" style="margin: 5px 0;">
-					&#9760; Delete player (drop here)
+					Delete player ( drop here )
 				</div>
 			</div>
 
 			<div class="cell workspace-cell">
 				<div class="team-toolbar big-toolbar" style="min-width: 35em;">
-					<input title="Delete all teams, move all players to lobby" type="button" class="team_btn"
-						onclick="reset_roll_click();" value=" &#x2716; Clear teams" />
+
+
+					<input title="Add new empty team" type="button" class="team_btn" onclick="add_empty_team();"
+						value="&#10133; Add team" />
+
 
 					<div class="team_toolbar_spacer"></div>
 
@@ -144,11 +148,22 @@
 
 					<div class="team_toolbar_spacer"></div>
 
-					<input title="Add new empty team" type="button" class="team_btn" onclick="add_empty_team();"
-						value="&#10133; Add team" />
+
+
+
+					<input title="Delete all teams, move all players to lobby" type="button" class="team_btn"
+						onclick="reset_roll_click();" value=" &#x2716; Clear teams" />
+
+
+					<div class="team_toolbar_spacer"></div>
+
 
 					<div class="teamcountcont"><span id="team_count">0</span> teams</div>
+
+
+
 				</div>
+				<br>
 				<div class="teams-container" id="teams_container">
 					<!-- rolled teams -->
 				</div>
@@ -171,7 +186,7 @@
 					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in" />
 
 
-					<input id="twitch_checkin_btn" disabled class="big-btn" type="button"
+					<input style="display: none" id="twitch_checkin_btn" disabled class="big-btn" type="button"
 						onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in"
 						autocomplete="off" />
 
@@ -183,7 +198,10 @@
 				</fieldset>
 
 
-				<fieldset style="text-align: center;" id="twitch-container">
+				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();"
+					value="&#9881; Settings" title="Open settings dialog" />
+
+				<fieldset style="text-align: center; visibility: hidden;" id="twitch-container">
 					<legend id="twitch-legend">Twitch</legend>
 
 					<div id="twitch_signin" style="padding-bottom: 0.5em;">
@@ -216,13 +234,11 @@
 				</fieldset>
 
 
-				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();"
-					value="&#9881; Settings" title="Open settings dialog" />
 
 
 
-				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();"
-					value="&#8635; Update stats" title="Update stats for all players" />
+				<input style="display: none" id="update_all_stats_btn" class="big-btn" type="button"
+					onclick="update_all_stats();" value="&#8635; Update stats" title="Update stats for all players" />
 				<input id="update_stats_stop_btn" class="big-btn" type="button" onclick="stop_stats_update();"
 					value="Stop" style="display:none" />
 				<div>
@@ -251,13 +267,16 @@
 
 
 
-					<input class="medium-btn" type="button" onclick="dbg_roll();" value="dbg roll" />
+					<input style="display: none" class="medium-btn" type="button" onclick="dbg_roll();"
+						value="dbg roll" />
 
-					<input class="medium-btn" type="button" onclick="dbg_twitch_chat();" value="dbg twitch chat" />
+					<input style="display: none" class="medium-btn" type="button" onclick="dbg_twitch_chat();"
+						value="dbg twitch chat" />
 
 
 
-					<input class="medium-btn" type="button" onclick="test();" value="test" title="" />
+					<input style="display: none" class="medium-btn" type="button" onclick="test();" value="test"
+						title="" />
 				</div>
 			</div>
 		</div>

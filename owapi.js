@@ -1,3 +1,4 @@
+//---- THIS IS BOKEN (DOESN'T WORK) ----
 // OWAPI interface object
 // usage: 
 // 1. set id to player BattleTag
