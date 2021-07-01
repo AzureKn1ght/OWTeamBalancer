@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>OverWatch Random Tournament</title>
+	<meta name="description" content="Overwatch random tournament">
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	<link rel="stylesheet" href="style2.css">
+	<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+	<script src="globals.js"></script>
+	<script src="ow_defines.js"></script>
+	<script src="common.js"></script>
+	<script src="owapi.js"></script>
+	<script src="stats_updater.js"></script>
+	<script src="import_export.js"></script>
+	<script src="ui.js"></script>
+	<script src="twitch.js"></script>
+	<script src="twitch_chat.js"></script>
+	<script src="init.js" defer></script>
+
+</head>
+
+<body>
+	<div class="copyright">2018-2021 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a
+			href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div>
+	<header>
+		<h1 class="page-title">Overwatch Random Tournament</h1>
+	</header>
+	<!-- <div class="copyright">2018-2020 by <a href="https://github.com/adminimusRU">l33t m3at</a> | Stats data by <a href="https://github.com/SunDwarf/OWAPI">OWAPI</a></div> -->
+	<div class="battle-tag-cont">
+		<div class="addplayer_cont">
+			<span id="plus">+</span>
+			<input id="new_player_id" name="new_player_id" type="text" size=35 placeholder="Enter Battle Tag" value=""
+				onkeyup="new_player_keyup(event);" />
+			<button onclick="add_player_click();" id="add_btn">Add player</button>
+		</div>
+	</div>
+	<div class="table workspace">
+		<div class="row" id="mainrow">
+			<div class="cell workspace-cell">
+				<!-- lobby -->
+
+				<div>
+					<span class="team-title">Lobby</span>
+				</div>
+
+				<div class="team-toolbar">
+					<input title="Clear lobby" type="button" class="team_btn" onclick="clear_lobby();" value=" X " />
+
+					<input title="Import lobby" id="import_lobby_btn" type="button" class="team_btn"
+						onclick="import_lobby_dlg_open();" value="Import" />
+					<input title="Export lobby" type="button" class="team_btn" onclick="export_lobby_dlg_open();"
+						value="Export" />
+
+					<div class="dropdown" style="float:right;">
+						<button class="team_btn dropbtn">&#x265B Captains &#x25BC;</button>
+						<div class="dropdown-content">
+							<div onclick="assign_captains();">Assign by SR</div>
+							<div onclick="export_captains_dlg_open();">Export btags</div>
+							<div onclick="import_captains_dlg_open();">Import btags</div>
+							<div onclick="clear_captains();">Clear all</div>
+						</div>
+					</div>
+
+					<div class="dropdown" style="margin: 0 2px">
+						<button class="team_btn dropbtn">&uarr;&darr; Sort &#x25BC;</button>
+						<div class="dropdown-content">
+							<div onclick="sort_lobby('order', this);">By order of addition</div>
+							<div onclick="sort_lobby('display_name', this);">By name</div>
+							<div onclick="sort_lobby('sr', this);">By SR</div>
+							<div onclick="sort_lobby('class', this);">By class</div>
+							<div onclick="sort_lobby('level', this);">By level</div>
+							<div onclick="sort_lobby('checkin', this);">By check-in</div>
+							<div onclick="sort_lobby('twitch_sub', this);">By twitch sub</div>
+							<div onclick="shuffle_lobby();">Shuffle</div>
+						</div>
+					</div>
+				</div>
+				<div>
+					<div>
+						<span id="lobby_count">0</span> players,
+					</div>
+					<div>
+						<span id="lobby_captain_count">0</span> captains,
+					</div>
+					<div>
+						<span title="Excluding players without twitch sub or not checked-in"><span
+								id="lobby_active_count">0</span> active</span>
+					</div>
+
+				</div>
+
+				<div class="filter-container">
+					<label for="lobby_filter">Filter: &nbsp;</label>
+					<input id="lobby_filter" class="filter" type="text" size=35 autocomplete="off"
+						placeholder="Player Name or Battletag" value="" oninput="on_lobby_filter_change()" />
+					<span onclick="lobby_filter_clear();" style="cursor: default;" title="Clear filter"
+						alt="Clear filter"> &#9003; </span>
+				</div>
+
+				<div class="lobby-container">
+					<div class="table team" id="lobby">
+
+					</div>
+				</div>
+
+
+				<div title="Drop player here to delete" class="trashcan" id="trashcan" ondrop="player_drop(event)"
+					ondragover="player_allowDrop(event)" style="margin: 5px 0;">
+					&#9760; Delete player (drop here)
+				</div>
+			</div>
+
+			<div class="cell workspace-cell">
+				<div class="team-toolbar big-toolbar" style="min-width: 35em;">
+					<input title="Delete all teams, move all players to lobby" type="button" class="team_btn"
+						onclick="reset_roll_click();" value=" &#x2716; Clear teams" />
+
+					<div class="team_toolbar_spacer"></div>
+
+					<div class="dropdown" style="float:right;">
+						<button class="team_btn dropbtn">&uarr;&darr; Sort players &#x25BC;</button>
+						<div class="dropdown-content">
+							<div onclick="sort_teams_players('display_name', this);">By name</div>
+							<div onclick="sort_teams_players('sr', this);">By SR</div>
+							<!--<div onclick="sort_teams_players('class', this);">by class</div>-->
+						</div>
+					</div>
+
+					<div class="team_toolbar_spacer"></div>
+
+					<div class="dropdown" style="float:right;">
+						<button class="team_btn dropbtn">&uarr;&darr; Sort teams &#x25BC;</button>
+						<div class="dropdown-content">
+							<div onclick="sort_teams(this);">By name</div>
+							<div onclick="sort_teams(this, 'captain_sr');">By captain SR</div>
+							<div onclick="shuffle_teams();">Shuffle</div>
+						</div>
+					</div>
+
+					<div class="team_toolbar_spacer"></div>
+
+					<input title="Add new empty team" type="button" class="team_btn" onclick="add_empty_team();"
+						value="&#10133; Add team" />
+
+					<div class="teamcountcont"><span id="team_count">0</span> teams</div>
+				</div>
+				<div class="teams-container" id="teams_container">
+					<!-- rolled teams -->
+				</div>
+				<!-- main toolbar -->
+			</div>
+			<div class="workspace-cell">
+				<input class="big-btn btn" type="button" id="roll_btn" onclick="roll_teams();"
+					value="&#127922; Roll teams" title="Roll random teams from lobby" />
+
+				<input class="big-btn btn" type="button" onclick="export_teams_dlg_open();" value="Export teams" />
+
+
+
+				<fieldset style="text-align: center;">
+					<legend>Check-in</legend>
+
+					<div style="padding-bottom: 0.5em;">
+						<span id="checkin_counter">0</span> checked-in
+					</div>
+					<input class="big-btn" type="button" onclick="manual_checkin_open();" value="Manual check-in" />
+
+
+					<input id="twitch_checkin_btn" disabled class="big-btn" type="button"
+						onclick="twitch_checkin_open();" title="Check-in with twitch chat" value="Twitch check-in"
+						autocomplete="off" />
+
+
+					<input class="medium-btn" type="button" onclick="import_checkin_open();" value="Import"
+						title="Import list of checked-in players" />
+					<input class="medium-btn" type="button" onclick="reset_checkin();" value="Reset"
+						title="Clear check-in mark for all players" />
+				</fieldset>
+
+
+				<fieldset style="text-align: center;" id="twitch-container">
+					<legend id="twitch-legend">Twitch</legend>
+
+					<div id="twitch_signin" style="padding-bottom: 0.5em;">
+						<a href="" rel="external" target="_self" id="twitch_signin_link"
+							onclick="twitch_signin();">Login</a>
+					</div>
+					<div id="twitch_user_info" style="display:none; padding-bottom: 0.5em;">
+						<img id="twitch_profile_image" src="" style="height:1.7em; vertical-align: middle;">
+						<span id="twitch_login_name"></span>
+						<button onclick="twitch_signout();" title="logout"
+							style="vertical-align: middle;">&times;</button>
+					</div>
+
+					<div style="padding-bottom: 0.5em; color: slateblue; padding: 2px;" id="subscriber-count-cont">
+						<span id="twitch_subs_counter"
+							style="color: white; text-shadow: 1px 1px 1px slateblue;">0</span> subscibers
+					</div>
+
+					<input class="big-btn" type="button" id="twitch_sub_check_btn" onclick="twitch_sub_check();"
+						value="Check subscribers"
+						title="Mark twitch subscibers in lobby. Players without subscription will be excluded from roll."
+						disabled autocomplete="off" style="color: slateblue; margin: 5px;" />
+
+					last checked: <span id="twitch_subs_last_checked_date"></span>
+
+
+					<input class="big-btn" type="button" id="twitch_sub_clear_btn" onclick="twitch_sub_reset();"
+						value="Reset subscribers" title="Clear twitch subsciber mark for all players"
+						style="color: slateblue; margin: 5px;" />
+				</fieldset>
+
+
+				<input class="big-btn" type="button" id="settings_btn" onclick="settings_dlg_open();"
+					value="&#9881; Settings" title="Open settings dialog" />
+
+
+
+				<input id="update_all_stats_btn" class="big-btn" type="button" onclick="update_all_stats();"
+					value="&#8635; Update stats" title="Update stats for all players" />
+				<input id="update_stats_stop_btn" class="big-btn" type="button" onclick="stop_stats_update();"
+					value="Stop" style="display:none" />
+				<div>
+					<div id="stats_update_processing" style="text-align: center;">
+						<progress id="stats_update_progress" value="0" max="100"
+							style="width: 100%; visibility:hidden;">
+						</progress>
+					</div>
+					<div id="stats_updater_status" style="min-height: 2em;">
+					</div>
+
+
+					<div id="stats_update_errors" style="color: red; visibility: hidden;">
+						<span id="stats_update_errors_count">N</span> errors occurred.
+						<a class="action-href" href="#" onclick="open_stats_update_log();">Click here to open
+							log</a>
+					</div>
+				</div>
+
+
+				<div style="display: block;" class="bottom-btn-container">
+					<input class="medium-btn" type="button" onclick="generate_random_players();"
+						value="+ random players" />
+
+					<input class="medium-btn" type="button" onclick="generate_random_teams();" value="+ random teams" />
+
+
+
+					<input class="medium-btn" type="button" onclick="dbg_roll();" value="dbg roll" />
+
+					<input class="medium-btn" type="button" onclick="dbg_twitch_chat();" value="dbg twitch chat" />
+
+
+
+					<input class="medium-btn" type="button" onclick="test();" value="test" title="" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_import_lobby" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Import players</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_import_lobby');" value="X" />
+
+
+
+				<div style="text-align: left;">
+					For table and csv formats fields should be in following order:
+					<span style="font-family: courier;color: blue;font-weight: bold;">battletag, [twitch_name, main
+						class, secondary class, third class, tank SR, DPS SR, support SR]</span>
+					twitch name, SR and classes are optional.
+
+					"Table" format is used for copy&paste from spreadsheets like Excel. Fields are separated by single
+					tabulation.
+
+					In CSV format fields can be separated with space, tab or following symbols: . , ; |
+
+
+				</div>
+
+				<div style="text-align: left">
+					<label for="dlg_player_import_format_value">Import format: </label>
+					<select id="dlg_player_import_format_value">
+						<option value="json">JSON (full info)</option>
+						<option value="csv-tab">table</option>
+						<option value="csv">CSV</option>
+					</select>
+				</div>
+
+				<textarea id="dlg_textarea_import_lobby" rows="20" cols="80" style="white-space: pre;"></textarea>
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_lobby_ok();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_export_lobby" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Export players</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_export_lobby');" value="X" />
+
+
+
+				<div id="dlg_lobby_export_format" class="dlg_options">
+					<label for="dlg_lobby_export_format_value">Export format: </label>
+					<select id="dlg_lobby_export_format_value" onchange="export_lobby_dlg_change_format();">
+						<option value="json">JSON (full info)</option>
+						<option value="text">text (btags only)</option>
+						<option value="csv">CSV (for Excel)</option>
+					</select>
+				</div>
+
+				<textarea id="dlg_textarea_export_lobby" rows="20" cols="80"></textarea>
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK"
+						onclick="close_dialog('popup_dlg_export_lobby');" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_export_teams" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Export teams</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_export_teams');" value="X" />
+
+
+
+				<div id="dlg_team_export_format" class="dlg_options">
+					<label for="dlg_team_export_format_value">Format: </label>
+					<select id="dlg_team_export_format_value" onchange="export_teams_dlg_change_format();"
+						autocomplete="off">
+						<option value="text-list">text list</option>
+						<option value="html-table" selected>HTML table</option>
+						<option value="image">image</option>
+					</select>
+				</div>
+				<div id="dlg_team_export_options" class="dlg_options" onchange="export_teams_dlg_change_format();">
+					<table style="width: 100%;">
+						<tr>
+							<td style="vertical-align: top;">
+								<input type="checkbox" id="dlg_team_export_players" checked>
+								<label for="dlg_team_export_players">Include players</label>
+
+								<input type="checkbox" id="dlg_team_export_sr" checked>
+								<label for="dlg_team_export_sr">Include SR</label>
+							</td>
+							<td style="vertical-align: top;">
+								<input type="checkbox" id="dlg_team_export_captains" checked>
+								<label for="dlg_team_export_captains">Mark team captains</label>
+
+								<input type="checkbox" id="dlg_team_export_classes" checked>
+								<label for="dlg_team_export_classes">Include classes/roles</label>
+							</td>
+							<td style="vertical-align: top;">
+								<label for="dlg_team_export_columns" style="display:inline-block;width: 7em;">
+									Table columns: </label>
+								<input id="dlg_team_export_columns" type="number" min=1 max=999 value=4
+									style="width: 3em;">
+
+								<label for="dlg_team_export_names" style="display:inline-block;width: 7em;">
+									Player names: </label>
+								<select id="dlg_team_export_names" autocomplete="off">
+									<option value="display_name">Short name</option>
+									<option value="id" selected>Full BattleTag</option>
+									<option value="twitch_name">Twitch name</option>
+								</select>
+							</td>
+						</tr>
+					</table>
+
+
+				</div>
+
+
+				<textarea id="dlg_textarea_export_teams" rows="20" cols="80"></textarea>
+				<div id="dlg_html_export_teams" class="html-export-container"></div>
+				<div id="dlg_html_export_teams_hint" style="text-align: left;">
+
+					<a class="action-href" href="#" onclick="export_teams_dlg_copy_html();">Click here</a> to copy teams
+					table to clipboard. Paste to Excel or Google Sheets.
+
+
+				</div>
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK"
+						onclick="close_dialog('popup_dlg_export_teams');" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_edit_player" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span id="dlg_title_edit_player" class="team-title">Player name</span>
+				<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_edit_player'); player_being_edited=undefined;" value="X" />
+
+
+				<fieldset class="edit-player-fieldset">
+					<legend>Identity</legend>
+					<div class="dlg_options table">
+						<div class="row">
+							<div class="cell">BattleTag:</div>
+							<div class="cell">
+								<span id="dlg_player_id"></span>
+								<a id="dlg_player_id_link" rel="external" target="_blank" href="" title="">&#x29c9;</a>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell"><label for="dlg_player_display_name">Display name:</label></div>
+							<div class="cell">
+								<input id="dlg_player_display_name" type="text">
+								<span id="dlg_player_name_edited" class="dlg-edited-mark"
+									title="Name was manually edited" onclick="clear_edited_mark('ne');">&#9997;</span>
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell"><label for="dlg_player_twitch_name">Twitch nickname:</label></div>
+							<div class="cell">
+								<input id="dlg_player_twitch_name" type="text">
+								<a id="dlg_player_twitch_link" rel="external" target="_blank" href=""
+									title="">&#x29c9;</a>
+							</div>
+						</div>
+					</div>
+				</fieldset>
+				<fieldset class="edit-player-fieldset">
+					<legend>Roll checks</legend>
+					<div class="dlg_options table">
+						<div class="row">
+							<div class="cell"><label for="dlg_player_twitch_sub" title="">Twitch subscriber:</label>
+							</div>
+							<div class="cell">
+								<input type="checkbox" id="dlg_player_twitch_sub">
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell"><label for="dlg_player_checkin" title="">Checked-in:</label></div>
+							<div class="cell">
+								<input type="checkbox" id="dlg_player_checkin">
+							</div>
+						</div>
+						<div class="row">
+							<div class="cell"><label for="dlg_player_captain"
+									title="Will be assigned as team captain in roll (ignoring SR). Each team can only have one predefined captain.">Predefined
+									captain:</label></div>
+							<div class="cell">
+								<input type="checkbox" id="dlg_player_captain">
+							</div>
+						</div>
+					</div>
+				</fieldset>
+				<fieldset class="edit-player-fieldset">
+					<legend>Stats</legend>
+					<div class="dlg_options table">
+						<div class="row">
+							<div class="cell">
+								<label for="dlg_player_level">Level:</label>
+							</div>
+							<div class="cell">
+								<div style="display:inline-block; width: 24px;"></div>
+								<input id="dlg_player_level" type="number" min=0 style="width: 4em;">
+								<span id="dlg_player_level_edited" class="dlg-edited-mark"
+									title="Level was manually edited" onclick="clear_edited_mark('le');">&#9997;</span>
+							</div>
+						</div>
+
+						<div class="row">
+							<div class="cell">
+								Classes:
+								<span id="dlg_player_class1_edited" class="dlg-edited-mark"
+									title="Classes were manually edited"
+									onclick="clear_edited_mark('ce');">&#9997;</span>
+							</div>
+							<div class="cell"></div>
+						</div>
+
+					</div>
+
+					<table id="dlg_player_class_table">
+						<!-- class rows here -->
+					</table>
+
+					<div id="dlg_top_heroes">
+						<span>Top heroes:</span>
+
+						<div id="dlg_top_heroes_icons" class="hero-icon-list"></div>
+					</div>
+
+					<div style="text-align: left;">
+
+						Stats last updated: <span id="dlg_edit_player_last_updated"></span>
+
+						<input id="dlg_update_player_stats" class="big-btn" type="button" value="&#8635; Update stats"
+							onclick="update_current_player_stats();" />
+
+					</div>
+
+
+					<div style="height: 2em; vertical-align: middle; text-align: center;">
+						<div id="dlg_update_player_stats_loader" class="loader inline-loader" style="display: none;">
+						</div>
+						<div id="dlg_edit_player_update_result" style="display: none;"></div>
+					</div>
+				</fieldset>
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_player_ok();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="popup_dlg_settings" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<div class="settings-title">
+					<span class="team-title">Settings</span>
+					<input title="Close" type="button" class="team_btn dlg-close"
+						onclick="close_dialog('popup_dlg_settings');" value="X" />
+				</div>
+
+				<div id="dlg_settings">
+					<table>
+						<tr>
+							<td rowspan="2" style="vertical-align: top;">
+								<div class="group" style="width: 25em;">
+									<div class="group-header">
+										Roll
+									</div>
+									<div class="group-content">
+										<div class="range-title">Balance priority</div>
+										<div style="text-align: center;">
+											<label for="roll_balance_priority_sr">
+												Average SR: </label>
+											<input id="roll_balance_priority_sr" type="number"
+												class="roll_balance_priority_input" value="0" min="0" max="100"
+												autocomplete="off" onchange="roll_balance_priority_input_change(this);">
+											%
+
+											<br>
+
+											<canvas id="roll_balance_priority_canvas" width="400" height="400"
+												style="cursor: crosshair;"></canvas>
+
+
+											<div style="text-align: left;">
+												<label for="roll_balance_priority_class"
+													title="Players on their main classes">
+													Main classes: </label>
+												<input id="roll_balance_priority_class" type="number"
+													class="roll_balance_priority_input" value="0" min="0" max="100"
+													autocomplete="off"
+													onchange="roll_balance_priority_input_change(this);">
+												%
+
+												<div style="float: right;">
+													<label for="roll_balance_priority_dispersion"
+														title="Equal SR dispersion in rolled teams">
+														SR dispersion: </label>
+													<input id="roll_balance_priority_dispersion" type="number"
+														class="roll_balance_priority_input" value="0" min="0" max="100"
+														autocomplete="off"
+														onchange="roll_balance_priority_input_change(this);">
+													%
+												</div>
+											</div>
+										</div>
+
+
+										<div class="range-title"
+											title="Shift target SR standard deviation from average of lobby">
+											Target SR dispersion:
+											<span id="roll_sr_stdev_adjust_value"></span>
+										</div>
+										<input id="roll_sr_stdev_adjust" type="range" size=3 min="-1000" max="1000"
+											step="10" autocomplete="off" value="0" style="width:90%"
+											onchange="settings_on_range_change(this, true);"
+											oninput="settings_on_range_change(this, true);" />
+
+										<div class="range-sub-container">
+											<div class="range-sub range-sub-left">less disperion</div>
+											<div class="range-sub range-sub-right">more dispersion</div>
+										</div>
+
+
+										<div class="range-title">
+											Roll quality:
+											<span id="roll_quality_value"></span>
+										</div>
+										<input id="roll_quality" type="range" size=3 min=0 max=100 autocomplete="off"
+											value="70" style="width:90%" onchange="settings_on_range_change(this);"
+											oninput="settings_on_range_change(this);" />
+
+										<div class="range-sub-container">
+											<div class="range-sub range-sub-left">fast, poor balance</div>
+											<div class="range-sub range-sub-right">slow, best balance</div>
+										</div>
+
+
+										<div class="range-title">
+											Roll coverage:
+											<span id="roll_coverage_value"></span>
+										</div>
+										<input id="roll_coverage" type="range" size=3 min=0 max=100 autocomplete="off"
+											value="50" style="width:90%" onchange="settings_on_range_change(this);"
+											oninput="settings_on_range_change(this);" />
+
+										<div class="range-sub-container">
+											<div class="range-sub range-sub-left">some players benched, only balanced
+												teams</div>
+											<div class="range-sub range-sub-right">all participate, some teams poorly
+												balanced</div>
+										</div>
+
+
+										<input type="checkbox" id="roll_team_count_power2">
+										<label for="roll_team_count_power2">Team count should be 2<sup>n</sup> (for
+											better bracket)</label>
+										<br>
+
+										<input type="checkbox" id="roll_separate_otps">
+										<label for="roll_separate_otps">Do not place similar one-trick ponies into same
+											team</label>
+										<br>
+
+										<input type="checkbox" id="roll_exclude_twitch_unsubs">
+										<label for="roll_exclude_twitch_unsubs">Exclude players without Twitch
+											subscription</label>
+
+										<label for="roll_min_level" style="width: 7em;display: inline-block;">
+											Minimum level</label>
+										<input type="number" id="roll_min_level" size=4 min=0 max=9999
+											autocomplete="off" value="0" style="width: 4em;" />
+
+
+										<label for="roll_captains" style="width: 7em;display: inline-block;">
+											Captains</label>
+										<select id="roll_captains">
+											<option value="disabled">do not assign</option>
+											<option value="highest-ranked">highest ranked player</option>
+										</select>
+									</div>
+								</div>
+
+							</td>
+							<td style="vertical-align: top;">
+								<div class="group" style="width: 25em;">
+									<div class="group-header">
+										SR adjustment
+									</div>
+									<div class="group-content">
+										<input type="checkbox" id="roll_adjust_sr" onchange="roll_adjust_sr_change();">
+										<label for="roll_adjust_sr">Adjust player SR by main class</label>
+
+										<div class="subgroup" id="roll_adjust_sr_sub">
+											<img src="class_icons/tank.png" style="height: 1em;" title="tank" />
+											<input disabled id="roll_adjust_tank" title="tank" class="percent"
+												type="number" size=3 min=0 max=999 autocomplete="off" value="100" />
+											% &nbsp;
+
+											<img src="class_icons/dps.png" style="height: 1em;" title="dps" />
+											<input disabled id="roll_adjust_dps" title="dps" class="percent"
+												type="number" size=3 min=0 max=999 autocomplete="off" value="120" />
+											% &nbsp;
+
+											<img src="class_icons/support.png" style="height: 1em;" title="support" />
+											<input disabled id="roll_adjust_support" title="support" class="percent"
+												type="number" size=3 min=0 max=999 autocomplete="off" value="80" />
+											%
+										</div>
+
+
+										<div class="range-title" title="">
+											Exponential SR scale:
+											<span id="roll_sr_scale_value"></span>
+										</div>
+										<input id="roll_sr_scale" type="range" size=3 min="0" max="10000" step="100"
+											autocomplete="off" value="0" style="width:90%"
+											onchange="settings_on_range_change(this, true); update_sr_scale_sample();"
+											oninput="settings_on_range_change(this, true);" />
+
+										<div class="subgroup">
+											SR scaling result:
+											<div id="settings_sr_scale_sample"
+												style="display: flex; flex-flow: column wrap; max-height: 3em;">
+											</div>
+										</div>
+
+
+									</div>
+								</div>
+
+
+
+								<div class="group" style="width: 25em;">
+									<div class="group-header">
+										Main
+									</div>
+									<div class="group-content">
+										Team slots
+
+										<div class="subgroup" id="slots_count_group">
+											<img src="class_icons/tank.png" style="height: 1em;" />
+											<input id="slots_count_tank" class="percent" type="number" size=3 min=0
+												max=12 autocomplete="off" value="2" />
+											&nbsp;
+
+											<img src="class_icons/dps.png" style="height: 1em;" />
+											<input id="slots_count_dps" class="percent" type="number" size=3 min=0
+												max=12 autocomplete="off" value="2" />
+											&nbsp;
+
+											<img src="class_icons/support.png" style="height: 1em;" />
+											<input id="slots_count_support" class="percent" type="number" size=3 min=0
+												max=12 autocomplete="off" value="2" />
+
+										</div>
+
+
+										<input type="checkbox" id="show_numeric_sr">
+										<label for="show_numeric_sr">Show numeric SR values in teams table</label>
+									</div>
+								</div>
+
+
+
+								<div class="group">
+									<div class="group-header">
+										Stats
+									</div>
+									<div class="group-content">
+
+										Region &nbsp;
+										<select id="region">
+											<option value="eu">EU</option>
+											<option value="us">US</option>
+											<option value="kr">KR</option>
+										</select>
+										<br>
+
+										<input type="checkbox" id="update_sr" checked>
+										<label for="update_sr">Update player SR</label>
+										<br>
+										<input type="checkbox" id="update_class" checked>
+										<label for="update_class">Update player class</label>
+										<br>
+										<input type="checkbox" id="update_level" checked>
+										<label for="update_level">Update player level</label>
+										<br>
+										<input type="checkbox" id="update_edited_fields">
+										<label for="update_edited_fields">Force update manually edited fields</label>
+									</div>
+								</div>
+
+
+
+
+
+							</td>
+						</tr>
+
+						<tr>
+							<td style="vertical-align: bottom;">
+								<div style="padding-bottom: 1em;">
+									<input id="dlg_reset" class="big-btn" type="button" value="Restore defaults"
+										onclick="reset_settings();" />
+								</div>
+							</td>
+
+						</tr>
+
+					</table>
+				</div>
+
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="apply_settings();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_roll_progress" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Rolling teams</span>
+
+
+
+
+				<div id="dlg_roll_progress">
+					<progress id="roll_progress_bar" value="0" max="100" style="width: 80%;"></progress>
+
+
+					<div id="dlg_roll_progress_text"></div>
+
+
+					<input id="dlg_roll_cancel" class="big-btn" type="button" value="Cancel" onclick="cancel_roll();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_stats_update_init" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Update stats</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_stats_update_init');" value="X" />
+
+
+
+				<div style="width:25em; text-align: left;">
+					Update stats older than <span style="color:blue;" id="dlg_stats_update_days">0</span> days
+
+
+					<input id="stats_update_limit" type="range" size=3 min=0 max=100 autocomplete="off" value="43"
+						style="width:90%" oninput="on_stats_update_limit_change();" />
+
+
+
+					Stats older than <span id="dlg_stats_update_date">0</span> will be updated.
+
+				</div>
+
+
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="update_stats_ok();" />
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_stats_log" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Stats updater log</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_stats_log');" value="X" />
+
+
+
+				<textarea readonly id="stats_update_log" rows="20" cols="80" autocomplete="off"></textarea>
+
+				<div style="padding-bottom: 1em;">
+					<input id="dlg_reset" class="big-btn" type="button" value="Clear log"
+						onclick="clear_stats_update_log();close_dialog('popup_dlg_stats_log');" />
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_edit_team" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content" style="min-width: 20em">
+				<span id="dlg_edit_team_title" class="team-title">Team name</span>
+				<input id="dlg_close" title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_edit_team'); team_being_edited=undefined;" value="X" />
+
+
+
+				<div class="dlg_options table">
+					<div class="row">
+						<div class="cell">Team name:</div>
+						<div class="cell">
+							<input id="dlg_edit_team_name" type="text" maxlength="200" style="width: 100%;">
+						</div>
+					</div>
+					<div class="row">
+						<div class="cell">Captain:</div>
+						<div class="cell">
+							<select id="dlg_edit_team_captain" style="width: 100%;">
+							</select>
+						</div>
+					</div>
+				</div>
+
+
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="edit_team_ok();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="popup_dlg_import_captains" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Import captains</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_import_captains');" value="X" />
+
+
+
+				<textarea id="dlg_textarea_import_captains" rows="20" cols="80"></textarea>
+
+				<div style="text-align: left;">
+					Enter captain BattleTags
+				</div>
+
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_captains_ok();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="popup_dlg_export_captains" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Export captains</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_export_captains');" value="X" />
+
+
+
+				<textarea id="dlg_textarea_export_captains" rows="20" cols="80"></textarea>
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK"
+						onclick="close_dialog('popup_dlg_export_captains');" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="popup_dlg_manual_checkin" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Manual check-in</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_manual_checkin');redraw_lobby();" value="X" />
+
+
+
+				<div style="height: 35em; overflow-y: scroll; min-width: 30em;">
+					<table id="manual_checkin_table" class="manual-checkin-table">
+						<thead>
+							<tr>
+								<th onclick="sort_manual_chekin_table(0);" title="click to sort">&#9745;</th>
+								<th onclick="sort_manual_chekin_table(1);" title="click to sort">Order</th>
+								<th onclick="sort_manual_chekin_table(2);" title="click to sort">Battletag</th>
+								<th onclick="sort_manual_chekin_table(3);" title="click to sort">Twitch name</th>
+							</tr>
+						</thead>
+						<tbody>
+
+						</tbody>
+						<tfoot>
+							<tr>
+								<td title="Total checked-in">0</td>
+								<td></td>
+								<td title="Total players">0</td>
+								<td></td>
+							</tr>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_import_checkin" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Import check-in list</span>
+				<input title="Close" type="button" class="team_btn dlg-close"
+					onclick="close_dialog('popup_dlg_import_checkin');" value="X" />
+
+
+
+				<textarea id="dlg_textarea_import_checkin" rows="20" cols="80"></textarea>
+
+				<div style="text-align: left;">
+					Load list of checked-in players (BattleTags or Twitch nicknames)
+				</div>
+
+
+				<div>
+					<input id="dlg_ok" class="big-btn" type="button" value="OK" onclick="import_checkin_ok();" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="popup_dlg_pending_action" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content" style="min-width: 20em;">
+				<span id="dlg_pending_action_title" class="team-title">Action title</span>
+
+
+
+
+				<div id="popup_dlg_pending_action_loader" class="loader inline-loader"></div>
+
+
+				<div id="dlg_pending_action_message">
+					Some text
+				</div>
+
+
+
+
+				<div>
+					<input id="popup_dlg_pending_action_ok" class="big-btn" type="button" value="OK" disabled
+						onclick="close_dialog('popup_dlg_pending_action');" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	<div id="popup_dlg_twitch_checkin" class="dlg" style="display:none">
+		<div class="dlg-background"></div>
+		<div class="dlg-container">
+			<div class="dlg-content">
+				<span class="team-title">Twitch check-in</span>
+				<input title="Close" type="button" class="team_btn dlg-close" onclick="twitch_checkin_close();"
+					value="X" />
+
+
+
+				<div style="text-align: left;">
+					<label for="twitch_checkin_channel">Twitch channel: </label>
+					<input id="twitch_checkin_channel" type="text" maxlength="200" required
+						onkeyup="twitch_checkin_channel_keyup(event);" autocomplete="off">
+
+					<input id="twitch_checkin_connect" type="button" value="connect" onclick="twitch_chat_connect();" />
+					<input id="twitch_checkin_disconnect" type="button" value="disconnect"
+						onclick="twitch_chat_disconnect();" />
+
+					<label for="twitch_checkin_keyword">Keyword: </label>
+					<input id="twitch_checkin_keyword" type="text" maxlength="200"
+						onchange="twitch_checkin_keyword_change();" placeholder="<any message counts>"
+						autocomplete="off">
+				</div>
+
+
+				<div style="display: flex; flex-wrap: nowrap; width: 40em;">
+					<div
+						style="flex: 1 1 10em; text-align: left;max-height: 35em;overflow-y: scroll; overflow-x: hidden;">
+						<div style="position: sticky;top: 0; background-color: lightgray; font-weight: bold;">
+							Checked-in:</div>
+						<div id="twitch_checkin_list">
+
+						</div>
+						<div style="position: sticky; bottom: 0; background-color: lightgray; font-weight: bold;">
+							Total: <span id="twitch_checkin_total">0</span>
+						</div>
+					</div>
+
+					<div id="twitch_checkin_chat"
+						style="flex: 3 1 30em; height: 35em; overflow-y: scroll; text-align: left; border: 1px solid lightgray; margin-left: 1em;">
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="debug_log"></div>
+</body>
+
+</html>
